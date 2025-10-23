@@ -2,30 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Section from '../components/Section';
 import { SERVICES, TESTIMONIALS } from '../constants';
-import { ArrowRight, ChevronLeft, ChevronRight, Users, Zap, Award } from 'lucide-react';
-import AnimatedCounter from '../components/AnimatedCounter';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
-
-interface ImpactNumbers {
-  projectsCompleted: number;
-  happyClients: number;
-  yearsOfExperience: number;
-}
-
-const ImpactNumberSkeleton: React.FC = () => (
-    <div className="text-center p-4 animate-pulse">
-        <div className="w-10 h-10 bg-gray-700 rounded-full mx-auto mb-2"></div>
-        <div className="h-12 bg-gray-700 rounded w-24 mx-auto"></div>
-        <div className="h-6 bg-gray-700 rounded w-40 mx-auto mt-2"></div>
-    </div>
-);
-
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HomePage: React.FC = () => {
     const [currentTestimonial, setCurrentTestimonial] = useState(0);
-    const [impactNumbers, setImpactNumbers] = useState<ImpactNumbers | null>(null);
-    const [loadingImpact, setLoadingImpact] = useState(true);
 
     const nextTestimonial = () => {
         setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
@@ -39,40 +19,6 @@ const HomePage: React.FC = () => {
         const timer = setTimeout(nextTestimonial, 5000);
         return () => clearTimeout(timer);
     }, [currentTestimonial]);
-
-    useEffect(() => {
-        const settingsDocRef = doc(db, 'settings', 'global');
-        
-        // Set up the real-time listener to automatically update numbers
-        const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                // Fallback to defaults if fields are missing or not numbers
-                const projectsCompleted = typeof data.projectsCompleted === 'number' ? data.projectsCompleted : 21;
-                const happyClients = typeof data.happyClients === 'number' ? data.happyClients : 400;
-                const yearsOfExperience = typeof data.yearsOfExperience === 'number' ? data.yearsOfExperience : 200;
-                
-                setImpactNumbers({
-                    projectsCompleted,
-                    happyClients,
-                    yearsOfExperience,
-                });
-            } else {
-                // Set default values if document doesn't exist
-                console.log("Global settings document does not exist, using fallback values.");
-                setImpactNumbers({ projectsCompleted: 21, happyClients: 400, yearsOfExperience: 200 });
-            }
-            setLoadingImpact(false);
-        }, (error) => {
-            console.error("Error listening to impact numbers:", error);
-            // Set default values on error
-            setImpactNumbers({ projectsCompleted: 21, happyClients: 400, yearsOfExperience: 200 });
-            setLoadingImpact(false);
-        });
-
-        // Cleanup: Unsubscribe from the listener when the component unmounts
-        return () => unsubscribe();
-    }, []);
 
     return (
         <div className="animate-fade-in-up">
@@ -113,26 +59,6 @@ const HomePage: React.FC = () => {
                     <Link to="/services" className="text-primary font-semibold hover:underline flex items-center justify-center gap-2">
                         View All Services <ArrowRight size={20} />
                     </Link>
-                </div>
-            </Section>
-
-            {/* Our Impact Section */}
-            <Section id="impact" className="bg-dark-bg text-white">
-                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-light-text">Our Impact in Numbers</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-                    {loadingImpact ? (
-                        <>
-                            <ImpactNumberSkeleton />
-                            <ImpactNumberSkeleton />
-                            <ImpactNumberSkeleton />
-                        </>
-                    ) : (
-                        <>
-                            <AnimatedCounter icon={<Zap size={40} className="mx-auto text-primary" />} target={impactNumbers?.projectsCompleted ?? 0} label="Projects Completed" />
-                            <AnimatedCounter icon={<Users size={40} className="mx-auto text-primary" />} target={impactNumbers?.happyClients ?? 0} label="Happy Clients" />
-                            <AnimatedCounter icon={<Award size={40} className="mx-auto text-primary" />} target={impactNumbers?.yearsOfExperience ?? 0} label="Years of Experience" />
-                        </>
-                    )}
                 </div>
             </Section>
 
